@@ -171,6 +171,8 @@ class WorkflowApiControllerTest {
             Map<?, ?> body = (Map<?, ?>) response.getBody();
             assertNotNull(body);
             assertEquals("TR-TR1", body.get("activity"));
+            assertNotNull(body);
+            assertNotNull(body.get("nextSteps"));
             assertEquals(1, ((List<?>) body.get("nextSteps")).size());
         }
 

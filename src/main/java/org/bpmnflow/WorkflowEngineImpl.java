@@ -80,7 +80,7 @@ public class WorkflowEngineImpl implements WorkflowEngine {
      */
     @Override
     public List<NextStep> nextSteps(String activityAbbreviation) {
-        ActivityNode source = findActivity(activityAbbreviation);
+        findActivity(activityAbbreviation); // validates existence, throws if not found
 
         return workflow.getRules().stream()
                 .filter(rule -> rule.getSource() != null)

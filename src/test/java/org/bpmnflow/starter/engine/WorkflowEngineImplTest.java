@@ -1,6 +1,5 @@
 package org.bpmnflow.starter.engine;
 
-import org.bpmnflow.WorkflowEngine;
 import org.bpmnflow.WorkflowEngine.NextStep;
 import org.bpmnflow.WorkflowEngineImpl;
 import org.bpmnflow.model.ActivityNode;
