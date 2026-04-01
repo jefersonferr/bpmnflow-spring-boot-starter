@@ -113,7 +113,9 @@ class WorkflowApiControllerTest {
             Map<String, Object> body = controller.validate().getBody();
             assertNotNull(body);
             assertEquals(false, body.get("valid"));
-            assertEquals(1, ((List<?>) body.get("inconsistencies")).size());
+            List<?> inconsistencies = (List<?>) body.get("inconsistencies");
+            assertNotNull(inconsistencies);
+            assertEquals(1, inconsistencies.size());
         }
     }
 
@@ -128,7 +130,9 @@ class WorkflowApiControllerTest {
 
             ResponseEntity<List<ActivityNode>> response = controller.activities();
             assertEquals(HttpStatus.OK, response.getStatusCode());
-            assertEquals(1, response.getBody().size());
+            List<ActivityNode> body = response.getBody();
+            assertNotNull(body);
+            assertEquals(1, body.size());
         }
     }
 
@@ -171,9 +175,9 @@ class WorkflowApiControllerTest {
             Map<?, ?> body = (Map<?, ?>) response.getBody();
             assertNotNull(body);
             assertEquals("TR-TR1", body.get("activity"));
-            assertNotNull(body);
-            assertNotNull(body.get("nextSteps"));
-            assertEquals(1, ((List<?>) body.get("nextSteps")).size());
+            List<?> nextSteps = (List<?>) body.get("nextSteps");
+            assertNotNull(nextSteps);
+            assertEquals(1, nextSteps.size());
         }
 
         @Test
@@ -193,7 +197,9 @@ class WorkflowApiControllerTest {
 
         ResponseEntity<List<Stage>> response = controller.stages();
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(1, response.getBody().size());
+        List<Stage> body = response.getBody();
+        assertNotNull(body);
+        assertEquals(1, body.size());
     }
 
     @Test
@@ -203,7 +209,9 @@ class WorkflowApiControllerTest {
 
         ResponseEntity<List<WorkflowRule>> response = controller.rules();
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertTrue(response.getBody().isEmpty());
+        List<WorkflowRule> body = response.getBody();
+        assertNotNull(body);
+        assertTrue(body.isEmpty());
     }
 
     @Nested
@@ -221,7 +229,9 @@ class WorkflowApiControllerTest {
             Map<?, ?> body = (Map<?, ?>) response.getBody();
             assertNotNull(body);
             assertEquals("NV", body.get("processStatus"));
-            assertEquals(1, ((List<?>) body.get("rules")).size());
+            List<?> rules = (List<?>) body.get("rules");
+            assertNotNull(rules);
+            assertEquals(1, rules.size());
         }
 
         @Test
@@ -229,10 +239,11 @@ class WorkflowApiControllerTest {
         void rulesByStatus_invalid_returns400() {
             when(engine.rulesTriggeredBy(""))
                     .thenThrow(new IllegalArgumentException("processStatus must not be blank"));
-
             ResponseEntity<?> response = controller.rulesByStatus("");
             assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-            assertTrue(((Map<?, ?>) response.getBody()).containsKey("error"));
+            Map<?, ?> body = (Map<?, ?>) response.getBody();
+            assertNotNull(body);
+            assertTrue(body.containsKey("error"));
         }
     }
 }
