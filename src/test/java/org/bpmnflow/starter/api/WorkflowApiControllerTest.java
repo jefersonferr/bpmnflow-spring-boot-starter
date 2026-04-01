@@ -239,6 +239,7 @@ class WorkflowApiControllerTest {
         void rulesByStatus_invalid_returns400() {
             when(engine.rulesTriggeredBy(""))
                     .thenThrow(new IllegalArgumentException("processStatus must not be blank"));
+
             ResponseEntity<?> response = controller.rulesByStatus("");
             assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
             Map<?, ?> body = (Map<?, ?>) response.getBody();
