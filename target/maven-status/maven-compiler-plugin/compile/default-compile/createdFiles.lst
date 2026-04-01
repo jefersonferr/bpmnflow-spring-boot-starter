@@ -1,0 +1,8 @@
+META-INF/spring-configuration-metadata.json
+org/bpmnflow/WorkflowEngine.class
+org/bpmnflow/WorkflowEngine$NextStep.class
+org/bpmnflow/WorkflowLoader.class
+org/bpmnflow/starter/autoconfigure/BpmnFlowProperties.class
+org/bpmnflow/starter/autoconfigure/BpmnFlowAutoConfiguration.class
+org/bpmnflow/starter/api/WorkflowApiController.class
+org/bpmnflow/WorkflowEngineImpl.class

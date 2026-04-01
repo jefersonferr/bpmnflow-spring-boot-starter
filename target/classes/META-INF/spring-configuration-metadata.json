@@ -1,0 +1,33 @@
+{
+  "groups": [
+    {
+      "name": "bpmnflow",
+      "type": "org.bpmnflow.starter.autoconfigure.BpmnFlowProperties",
+      "sourceType": "org.bpmnflow.starter.autoconfigure.BpmnFlowProperties"
+    }
+  ],
+  "properties": [
+    {
+      "name": "bpmnflow.config-path",
+      "type": "java.lang.String",
+      "description": "Path to the YAML validation\/extraction config consumed by bpmn-model-parser. Supports {@code classpath:} and absolute filesystem paths.",
+      "sourceType": "org.bpmnflow.starter.autoconfigure.BpmnFlowProperties",
+      "defaultValue": "classpath:bpmn-config.yaml"
+    },
+    {
+      "name": "bpmnflow.expose-api",
+      "type": "java.lang.Boolean",
+      "description": "When true, registers a REST controller at {@code \/bpmnflow\/**} exposing workflow inspection and navigation endpoints. Default: true.",
+      "sourceType": "org.bpmnflow.starter.autoconfigure.BpmnFlowProperties",
+      "defaultValue": true
+    },
+    {
+      "name": "bpmnflow.model-path",
+      "type": "java.lang.String",
+      "description": "Path to the BPMN model file. Supports {@code classpath:} and absolute filesystem paths.",
+      "sourceType": "org.bpmnflow.starter.autoconfigure.BpmnFlowProperties",
+      "defaultValue": "classpath:process.bpmn"
+    }
+  ],
+  "hints": []
+}

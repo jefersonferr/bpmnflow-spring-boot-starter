@@ -1,0 +1,17 @@
+org/bpmnflow/starter/engine/WorkflowEngineImplTest$FindActivityTests.class
+org/bpmnflow/starter/engine/WorkflowEngineImplTest$ValidateTests.class
+org/bpmnflow/starter/api/WorkflowApiControllerTest$InfoTests.class
+org/bpmnflow/starter/api/WorkflowApiControllerTest$ValidateTests.class
+org/bpmnflow/starter/autoconfigure/BpmnFlowAutoConfigurationTest$CustomEngineConfig.class
+org/bpmnflow/starter/api/WorkflowApiControllerTest$ActivitiesTests.class
+org/bpmnflow/starter/autoconfigure/BpmnFlowAutoConfigurationTest.class
+org/bpmnflow/starter/api/WorkflowApiControllerTest$RulesByStatusTests.class
+org/bpmnflow/starter/api/WorkflowApiControllerTest$NextStepsTests.class
+org/bpmnflow/starter/api/WorkflowApiControllerTest.class
+org/bpmnflow/starter/engine/WorkflowEngineImplTest$RulesTriggeredByTests.class
+org/bpmnflow/starter/autoconfigure/BpmnFlowAutoConfigurationTest$CustomEngineConfig$CustomEngine.class
+org/bpmnflow/starter/engine/WorkflowEngineImplTest.class
+org/bpmnflow/starter/autoconfigure/BpmnFlowAutoConfigurationTest$MockedLoaderConfig.class
+org/bpmnflow/starter/api/WorkflowApiControllerTest$ActivityByAbbreviationTests.class
+org/bpmnflow/starter/engine/WorkflowEngineImplTest$NextStepsTests.class
+org/bpmnflow/starter/engine/WorkflowEngineImplTest$ListActivitiesTests.class

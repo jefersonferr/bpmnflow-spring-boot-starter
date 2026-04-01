@@ -1,0 +1,3 @@
+/home/jeferson/devel/ideaProjects/bpmnflow-spring-boot-starter/src/test/java/org/bpmnflow/starter/api/WorkflowApiControllerTest.java
+/home/jeferson/devel/ideaProjects/bpmnflow-spring-boot-starter/src/test/java/org/bpmnflow/starter/autoconfigure/BpmnFlowAutoConfigurationTest.java
+/home/jeferson/devel/ideaProjects/bpmnflow-spring-boot-starter/src/test/java/org/bpmnflow/starter/engine/WorkflowEngineImplTest.java
