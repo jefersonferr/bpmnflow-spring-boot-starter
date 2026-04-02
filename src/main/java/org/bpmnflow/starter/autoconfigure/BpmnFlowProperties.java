@@ -1,5 +1,7 @@
 package org.bpmnflow.starter.autoconfigure;
 
+import lombok.Getter;
+import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
@@ -15,6 +17,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  *   expose-api: true
  * </pre>
  */
+@Getter
+@Setter
 @ConfigurationProperties(prefix = "bpmnflow")
 public class BpmnFlowProperties {
 
@@ -35,13 +39,4 @@ public class BpmnFlowProperties {
      * workflow inspection and navigation endpoints. Default: true.
      */
     private boolean exposeApi = true;
-
-    public String getModelPath() { return modelPath; }
-    public void setModelPath(String modelPath) { this.modelPath = modelPath; }
-
-    public String getConfigPath() { return configPath; }
-    public void setConfigPath(String configPath) { this.configPath = configPath; }
-
-    public boolean isExposeApi() { return exposeApi; }
-    public void setExposeApi(boolean exposeApi) { this.exposeApi = exposeApi; }
 }

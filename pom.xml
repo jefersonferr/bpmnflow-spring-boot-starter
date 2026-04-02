@@ -42,7 +42,7 @@
         <java.version>17</java.version>
         <maven.compiler.release>17</maven.compiler.release>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <spring-boot.version>3.3.4</spring-boot.version>
+        <spring-boot.version>3.5.13</spring-boot.version>
         <bpmnflow-core.version>2.0.0</bpmnflow-core.version>
     </properties>
 
@@ -119,7 +119,6 @@
             <artifactId>spring-boot-test-autoconfigure</artifactId>
             <scope>test</scope>
         </dependency>
-
     </dependencies>
 
     <build>
@@ -144,6 +143,11 @@
                         </path>
                     </annotationProcessorPaths>
                 </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.2.5</version>
             </plugin>
         </plugins>
     </build>
