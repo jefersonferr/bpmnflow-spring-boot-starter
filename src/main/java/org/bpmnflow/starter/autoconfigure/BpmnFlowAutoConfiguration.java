@@ -23,8 +23,9 @@ import org.springframework.core.io.ResourceLoader;
  * </ol>
  *
  * <p>All beans are conditional: if the application already defines a {@link WorkflowEngine},
- * auto-configuration backs off completely.
+ * auto-configuration backs off completely.</p>
  */
+@SuppressWarnings("unused")
 @AutoConfiguration
 @EnableConfigurationProperties(BpmnFlowProperties.class)
 public class BpmnFlowAutoConfiguration {
@@ -50,12 +51,14 @@ public class BpmnFlowAutoConfiguration {
 
     /**
      * Registers the REST API only in web applications and when {@code bpmnflow.expose-api=true}.
+     * Injects both the engine and the loader — the loader is needed by the upload endpoint
+     * to re-parse uploaded models using the same config that was active at startup.
      */
     @Bean
     @ConditionalOnWebApplication
     @ConditionalOnMissingBean(WorkflowApiController.class)
     @ConditionalOnProperty(prefix = "bpmnflow", name = "expose-api", havingValue = "true", matchIfMissing = true)
-    public WorkflowApiController workflowApiController(WorkflowEngine engine) {
-        return new WorkflowApiController(engine);
+    public WorkflowApiController workflowApiController(WorkflowEngine engine, WorkflowLoader loader) {
+        return new WorkflowApiController(engine, loader);
     }
 }
