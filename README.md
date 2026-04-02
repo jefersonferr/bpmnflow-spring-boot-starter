@@ -1,0 +1,233 @@
+# BPMNFlow Spring Boot Starter
+
+> Zero-config Spring Boot integration for [bpmnflow-core](https://github.com/jefersonferr/bpmnflow-core) — parse a BPMN model at startup, query it at runtime, and optionally expose it as a REST API.
+
+![Java](https://img.shields.io/badge/Java-17-blue)
+![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.3.4-brightgreen)
+![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
+
+---
+
+## Table of Contents
+
+- [What it does](#what-it-does)
+- [Quick Start](#quick-start)
+- [Configuration](#configuration)
+- [WorkflowEngine API](#workflowengine-api)
+- [REST API](#rest-api)
+- [Customization](#customization)
+- [What's Next](#whats-next)
+
+---
+
+## What it does
+
+`bpmnflow-spring-boot-starter` wraps `bpmnflow-core` as a Spring Boot auto-configuration. Drop it into any Spring Boot application and you get:
+
+- A **`WorkflowEngine`** bean ready for injection — no setup code required
+- **BPMN model parsed at startup** from classpath or filesystem paths
+- An optional **REST API** at `/bpmnflow/**` for model inspection and navigation
+- **Swagger UI** automatically available when springdoc is on the classpath
+- Full **back-off support** — if you define your own `WorkflowEngine` bean, auto-configuration steps aside
+
+---
+
+## Quick Start
+
+### 1. Add the dependency
+
+```xml
+<dependency>
+    <groupId>org.bpmnflow</groupId>
+    <artifactId>bpmnflow-spring-boot-starter</artifactId>
+    <version>2.0.0</version>
+</dependency>
+```
+
+### 2. Add your files to `src/main/resources`
+
+```
+src/main/resources/
+├── process.bpmn          ← your BPMN model (default path)
+└── bpmn-config.yaml      ← your validation/extraction config (default path)
+```
+
+### 3. Inject and use
+
+```java
+@Service
+public class CaseService {
+
+    private final WorkflowEngine engine;
+
+    public CaseService(WorkflowEngine engine) {
+        this.engine = engine;
+    }
+
+    public List<WorkflowEngine.NextStep> getNextSteps(String currentActivity) {
+        return engine.nextSteps(currentActivity);
+    }
+
+    public List<WorkflowRule> getEntryRules(String processStatus) {
+        return engine.rulesTriggeredBy(processStatus);
+    }
+}
+```
+
+That's it. No `@Bean` methods, no `ModelParser` calls, no stream wiring.
+
+---
+
+## Configuration
+
+All properties are declared under the `bpmnflow` prefix. IDE auto-complete is supported via the included configuration metadata.
+
+```yaml
+bpmnflow:
+  model-path: classpath:process.bpmn       # default
+  config-path: classpath:bpmn-config.yaml  # default
+  expose-api: true                         # default
+```
+
+| Property | Type | Default | Description |
+|---|---|---|---|
+| `bpmnflow.model-path` | `String` | `classpath:process.bpmn` | Path to the BPMN model. Supports `classpath:` and absolute filesystem paths. |
+| `bpmnflow.config-path` | `String` | `classpath:bpmn-config.yaml` | Path to the YAML validation/extraction config. Supports `classpath:` and absolute filesystem paths. |
+| `bpmnflow.expose-api` | `boolean` | `true` | When `true`, registers the REST controller at `/bpmnflow/**`. |
+
+### Filesystem paths
+
+Both `model-path` and `config-path` also accept raw filesystem paths, which is useful in containerized environments where files live outside the JAR:
+
+```yaml
+bpmnflow:
+  model-path: /data/workflows/process.bpmn
+  config-path: /data/workflows/bpmn-config.yaml
+```
+
+---
+
+## WorkflowEngine API
+
+`WorkflowEngine` is a read-only, thread-safe interface. All methods derive their results from the parsed model — there is no mutable state.
+
+```java
+// Full parsed model
+Workflow workflow = engine.getWorkflow();
+
+// Validation
+boolean valid = engine.isValid();
+List<Inconsistency> issues = engine.validate();
+
+// Listing
+List<ActivityNode> activities = engine.listActivities();
+List<Stage>        stages     = engine.listStages();
+List<WorkflowRule> rules      = engine.listRules();
+
+// Navigation
+ActivityNode activity = engine.findActivity("TR-TR1");
+
+// Next steps from a given activity
+List<WorkflowEngine.NextStep> steps = engine.nextSteps("TR-TR1");
+// NextStep fields: targetActivity, conclusion, processStatus, ruleType
+
+// Entry rules for a given process status
+List<WorkflowRule> entryRules = engine.rulesTriggeredBy("NV");
+```
+
+### `NextStep` record
+
+`nextSteps(abbreviation)` returns a list of `NextStep` records, each describing one possible outgoing transition:
+
+| Field | Type | Description |
+|---|---|---|
+| `targetActivity` | `ActivityNode` | The destination activity (`null` for end events) |
+| `conclusion` | `String` | The conclusion code that triggers this path (may be `null`) |
+| `processStatus` | `String` | The resulting process status after the transition (may be `null`) |
+| `ruleType` | `String` | The rule type name, e.g. `TASK_TO_TASK`, `SPLIT_TO_TASK` |
+
+---
+
+## REST API
+
+When `bpmnflow.expose-api=true` (the default) and the application is a web app, the following endpoints are registered at `/bpmnflow/**`.
+
+| Method | Path | Description |
+|---|---|---|
+| `GET` | `/bpmnflow/info` | Workflow metadata: name, id, version, type, subtype, health summary |
+| `GET` | `/bpmnflow/validate` | Validation result and list of inconsistencies |
+| `GET` | `/bpmnflow/activities` | All activities in the workflow |
+| `GET` | `/bpmnflow/activities/{abbreviation}` | Single activity by abbreviation (e.g. `TR-TR1`) |
+| `GET` | `/bpmnflow/activities/{abbreviation}/next` | All outgoing transitions from a given activity |
+| `GET` | `/bpmnflow/stages` | All stages declared in the workflow lanes |
+| `GET` | `/bpmnflow/rules` | All workflow rules (transitions) |
+| `GET` | `/bpmnflow/rules/by-status?status=NV` | Rules whose process status matches the given value |
+
+### Swagger UI
+
+If `springdoc-openapi-starter-webmvc-ui` is on the classpath, the full OpenAPI documentation is available at:
+
+```
+http://localhost:8080/swagger-ui.html
+```
+
+### Disabling the API
+
+```yaml
+bpmnflow:
+  expose-api: false
+```
+
+---
+
+## Customization
+
+### Custom `WorkflowEngine`
+
+Define your own bean and auto-configuration backs off completely:
+
+```java
+@Configuration
+public class MyEngineConfig {
+
+    @Bean
+    public WorkflowEngine workflowEngine(WorkflowLoader loader) {
+        return new MyCustomEngine(loader.getWorkflow());
+    }
+}
+```
+
+`MyCustomEngine` must implement the `WorkflowEngine` interface. The `WorkflowLoader` bean is still registered and available for injection.
+
+### Using `WorkflowLoader` directly
+
+If you need access to the raw parsed `Workflow` object:
+
+```java
+@Component
+public class ModelInspector {
+
+    private final WorkflowLoader loader;
+
+    public ModelInspector(WorkflowLoader loader) {
+        this.loader = loader;
+    }
+
+    public Workflow getRawWorkflow() {
+        return loader.getWorkflow();
+    }
+}
+```
+
+---
+
+## What's Next
+
+- CI/CD badge once GitHub Actions pipeline is configured
+- Publication to Maven Central
+
+---
+
+## License
+
+MIT — see [LICENSE](LICENSE).
