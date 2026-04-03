@@ -3,8 +3,9 @@
 > Zero-config Spring Boot integration for [bpmnflow-core](https://github.com/jefersonferr/bpmnflow-core) — parse a BPMN model at startup, query it at runtime, and optionally expose it as a REST API.
 
 ![Java](https://img.shields.io/badge/Java-17-blue)
-![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.3.4-brightgreen)
+![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.5.x-brightgreen)
 ![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
+![CI](https://github.com/jefersonferr/bpmnflow-spring-boot-starter/actions/workflows/ci.yml/badge.svg)
 
 ---
 
@@ -26,6 +27,7 @@
 
 - A **`WorkflowEngine`** bean ready for injection — no setup code required
 - **BPMN model parsed at startup** from classpath or filesystem paths
+- **Hot-swap support** — upload a new `.bpmn` file at runtime via `POST /bpmnflow/model` without restarting
 - An optional **REST API** at `/bpmnflow/**` for model inspection and navigation
 - **Swagger UI** automatically available when springdoc is on the classpath
 - Full **back-off support** — if you define your own `WorkflowEngine` bean, auto-configuration steps aside
@@ -64,8 +66,8 @@ public class CaseService {
         this.engine = engine;
     }
 
-    public List<WorkflowEngine.NextStep> getNextSteps(String currentActivity) {
-        return engine.nextSteps(currentActivity);
+    public List<WorkflowEngine.NextStep> getNextSteps(String activityAbbreviation) {
+        return engine.nextSteps(activityAbbreviation);
     }
 
     public List<WorkflowRule> getEntryRules(String processStatus) {
@@ -75,6 +77,15 @@ public class CaseService {
 ```
 
 That's it. No `@Bean` methods, no `ModelParser` calls, no stream wiring.
+
+### 4. Hot-swap the active model at runtime
+
+```bash
+curl -X POST http://localhost:8080/bpmnflow/model \
+  -F "file=@my-process.bpmn"
+```
+
+All subsequent requests to `/bpmnflow/**` and any bean injecting `AtomicReference<WorkflowEngine>` will immediately reflect the new model.
 
 ---
 
@@ -97,7 +108,7 @@ bpmnflow:
 
 ### Filesystem paths
 
-Both `model-path` and `config-path` also accept raw filesystem paths, which is useful in containerized environments where files live outside the JAR:
+Both `model-path` and `config-path` also accept raw filesystem paths, useful in containerized environments where files live outside the JAR:
 
 ```yaml
 bpmnflow:
@@ -124,15 +135,15 @@ List<ActivityNode> activities = engine.listActivities();
 List<Stage>        stages     = engine.listStages();
 List<WorkflowRule> rules      = engine.listRules();
 
-// Navigation
-ActivityNode activity = engine.findActivity("TR-TR1");
+// Navigation — abbreviation format is defined by the active BPMN model
+ActivityNode activity = engine.findActivity(abbreviation);
 
 // Next steps from a given activity
-List<WorkflowEngine.NextStep> steps = engine.nextSteps("TR-TR1");
+List<WorkflowEngine.NextStep> steps = engine.nextSteps(abbreviation);
 // NextStep fields: targetActivity, conclusion, processStatus, ruleType
 
-// Entry rules for a given process status
-List<WorkflowRule> entryRules = engine.rulesTriggeredBy("NV");
+// Rules triggered by a given process status
+List<WorkflowRule> entryRules = engine.rulesTriggeredBy(processStatus);
 ```
 
 ### `NextStep` record
@@ -146,6 +157,28 @@ List<WorkflowRule> entryRules = engine.rulesTriggeredBy("NV");
 | `processStatus` | `String` | The resulting process status after the transition (may be `null`) |
 | `ruleType` | `String` | The rule type name, e.g. `TASK_TO_TASK`, `SPLIT_TO_TASK` |
 
+### Live model awareness
+
+Beans that need to always reflect the currently active model — including models uploaded at runtime — should inject `AtomicReference<WorkflowEngine>` instead of `WorkflowEngine` directly:
+
+```java
+@Component
+public class ProcessNavigator {
+
+    private final AtomicReference<WorkflowEngine> engineRef;
+
+    public ProcessNavigator(AtomicReference<WorkflowEngine> engineRef) {
+        this.engineRef = engineRef;
+    }
+
+    public List<WorkflowEngine.NextStep> getNextSteps(String abbreviation) {
+        return engineRef.get().nextSteps(abbreviation);
+    }
+}
+```
+
+Beans that inject `WorkflowEngine` directly receive the engine active at startup and will not reflect subsequent model uploads.
+
 ---
 
 ## REST API
@@ -154,14 +187,15 @@ When `bpmnflow.expose-api=true` (the default) and the application is a web app, 
 
 | Method | Path | Description |
 |---|---|---|
+| `POST` | `/bpmnflow/model` | Upload a new `.bpmn` file to replace the active model at runtime |
 | `GET` | `/bpmnflow/info` | Workflow metadata: name, id, version, type, subtype, health summary |
 | `GET` | `/bpmnflow/validate` | Validation result and list of inconsistencies |
 | `GET` | `/bpmnflow/activities` | All activities in the workflow |
-| `GET` | `/bpmnflow/activities/{abbreviation}` | Single activity by abbreviation (e.g. `TR-TR1`) |
+| `GET` | `/bpmnflow/activities/{abbreviation}` | Single activity by abbreviation |
 | `GET` | `/bpmnflow/activities/{abbreviation}/next` | All outgoing transitions from a given activity |
 | `GET` | `/bpmnflow/stages` | All stages declared in the workflow lanes |
 | `GET` | `/bpmnflow/rules` | All workflow rules (transitions) |
-| `GET` | `/bpmnflow/rules/by-status?status=NV` | Rules whose process status matches the given value |
+| `GET` | `/bpmnflow/rules/by-status?status={status}` | Rules whose process status matches the given value |
 
 ### Swagger UI
 
@@ -223,7 +257,6 @@ public class ModelInspector {
 
 ## What's Next
 
-- CI/CD badge once GitHub Actions pipeline is configured
 - Publication to Maven Central
 
 ---
