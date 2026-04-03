@@ -135,10 +135,10 @@ public class WorkflowApiController {
     }
 
     @Operation(summary = "Find activity by abbreviation",
-            description = "Returns a single activity by its abbreviation (stageCode-activityCode), e.g. TR-TR1")
+            description = "Returns a single activity by its abbreviation as defined in the active BPMN model")
     @GetMapping("/activities/{abbreviation}")
     public ResponseEntity<?> activity(
-            @Parameter(description = "Activity abbreviation", example = "TR-TR1")
+            @Parameter(description = "Activity abbreviation as defined in the active BPMN model")
             @PathVariable("abbreviation") String abbreviation) {
         try {
             return ResponseEntity.ok(engineRef.get().findActivity(abbreviation));
@@ -148,10 +148,10 @@ public class WorkflowApiController {
     }
 
     @Operation(summary = "Next steps from an activity",
-            description = "Returns every possible transition reachable from the given activity.")
+            description = "Returns every possible transition reachable from the given activity in the active BPMN model")
     @GetMapping("/activities/{abbreviation}/next")
     public ResponseEntity<?> nextSteps(
-            @Parameter(description = "Activity abbreviation", example = "TR-TR1")
+            @Parameter(description = "Activity abbreviation as defined in the active BPMN model")
             @PathVariable("abbreviation") String abbreviation) {
         try {
             List<NextStep> steps = engineRef.get().nextSteps(abbreviation);
@@ -179,10 +179,10 @@ public class WorkflowApiController {
     }
 
     @Operation(summary = "Rules triggered by process status",
-            description = "Returns all rules whose process status matches the given value. Example: status=NV")
+            description = "Returns all rules whose process status matches the given value")
     @GetMapping("/rules/by-status")
     public ResponseEntity<?> rulesByStatus(
-            @Parameter(description = "Process status value", example = "NV")
+            @Parameter(description = "Process status value as defined in the active BPMN model")
             @RequestParam("status") String status) {
         try {
             List<WorkflowRule> rules = engineRef.get().rulesTriggeredBy(status);
