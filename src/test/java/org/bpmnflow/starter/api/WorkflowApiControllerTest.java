@@ -2,6 +2,7 @@ package org.bpmnflow.starter.api;
 
 import org.bpmnflow.WorkflowEngine;
 import org.bpmnflow.WorkflowEngine.NextStep;
+import org.bpmnflow.WorkflowLoader;
 import org.bpmnflow.model.ActivityNode;
 import org.bpmnflow.model.Inconsistency;
 import org.bpmnflow.model.RuleType;
@@ -13,7 +14,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
@@ -21,6 +21,7 @@ import org.springframework.http.ResponseEntity;
 
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -32,7 +33,9 @@ class WorkflowApiControllerTest {
     @Mock
     private WorkflowEngine engine;
 
-    @InjectMocks
+    @Mock
+    private WorkflowLoader loader;
+
     private WorkflowApiController controller;
 
     private Workflow workflow;
@@ -40,6 +43,9 @@ class WorkflowApiControllerTest {
 
     @BeforeEach
     void setUp() {
+        // Wire the controller manually so AtomicReference is properly initialised
+        controller = new WorkflowApiController(new AtomicReference<>(engine), loader);
+
         workflow = new Workflow("My Process", "PROC-001", "1.0",
                 "Process documentation", "RD", "ODN");
         activity = new ActivityNode("TR", "TR1", "Triage", null);

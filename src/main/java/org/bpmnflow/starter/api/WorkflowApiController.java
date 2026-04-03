@@ -30,8 +30,9 @@ import java.util.concurrent.atomic.AtomicReference;
 public class WorkflowApiController {
 
     /**
-     * Holds the active engine. AtomicReference guarantees that a model upload
-     * and concurrent read requests never see a partially-updated state.
+     * Shared mutable engine holder — injected from the auto-configuration.
+     * Updating this reference propagates to every bean that shares it,
+     * including application beans that inject {@code AtomicReference<WorkflowEngine>}.
      */
     private final AtomicReference<WorkflowEngine> engineRef;
 
@@ -41,8 +42,8 @@ public class WorkflowApiController {
      */
     private final WorkflowLoader loader;
 
-    public WorkflowApiController(WorkflowEngine engine, WorkflowLoader loader) {
-        this.engineRef = new AtomicReference<>(engine);
+    public WorkflowApiController(AtomicReference<WorkflowEngine> engineRef, WorkflowLoader loader) {
+        this.engineRef = engineRef;
         this.loader    = loader;
     }
 
