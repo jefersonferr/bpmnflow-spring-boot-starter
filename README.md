@@ -15,6 +15,7 @@
 
 - [What it does](#what-it-does)
 - [Quick Start](#quick-start)
+- [See it in action](#see-it-in-action)
 - [Engine Support](#engine-support)
 - [Configuration](#configuration)
 - [WorkflowEngine API](#workflowengine-api)
@@ -35,6 +36,7 @@
 - An optional **REST API** at `/bpmnflow/**` for model inspection and navigation
 - **Swagger UI** automatically available when springdoc is on the classpath
 - Full **back-off support** — if you define your own `WorkflowEngine` bean, auto-configuration steps aside
+- **Runnable demo available** — see [bpmnflow-spring-boot-demo](https://github.com/jefersonferr/bpmnflow-spring-boot-demo) for a complete working example
 
 ---
 
@@ -93,6 +95,23 @@ All subsequent requests to `/bpmnflow/**` and any bean injecting `AtomicReferenc
 
 ---
 
+## See it in action
+
+The [bpmnflow-spring-boot-demo](https://github.com/jefersonferr/bpmnflow-spring-boot-demo) is a runnable Spring Boot application that demonstrates the starter end-to-end:
+
+- A **Pizza Delivery** BPMN process pre-loaded at startup
+- Generic `ProcessController` endpoints that navigate the model without any hardcoded business logic
+- Hot-swap — upload a different `.bpmn` at runtime via `POST /bpmnflow/model`
+- Full Swagger UI at `http://localhost:8080/swagger-ui.html`
+
+```bash
+git clone https://github.com/jefersonferr/bpmnflow-spring-boot-demo.git
+cd bpmnflow-spring-boot-demo
+mvn spring-boot:run
+```
+
+---
+
 ## Engine Support
 
 BPMNFlow supports BPMN models created with both **Camunda 7** and **Camunda 8** (Zeebe). The target engine is declared in your `bpmn-config.yaml` via the `engine` field — no code changes required.
@@ -111,12 +130,12 @@ Extension properties use the `camunda:` namespace in the BPMN XML:
 
 ```xml
 <bpmn:task id="Task_1" name="My Task">
-  <bpmn:extensionElements>
-    <camunda:properties>
-      <camunda:property name="stage"    value="ST" />
-      <camunda:property name="activity" value="AC1" />
-    </camunda:properties>
-  </bpmn:extensionElements>
+    <bpmn:extensionElements>
+        <camunda:properties>
+            <camunda:property name="stage"    value="ST" />
+            <camunda:property name="activity" value="AC1" />
+        </camunda:properties>
+    </bpmn:extensionElements>
 </bpmn:task>
 ```
 
@@ -134,12 +153,12 @@ Extension properties use the `zeebe:` namespace in the BPMN XML:
 
 ```xml
 <bpmn:task id="Task_1" name="My Task">
-  <bpmn:extensionElements>
-    <zeebe:properties>
-      <zeebe:property name="stage"    value="ST" />
-      <zeebe:property name="activity" value="AC1" />
-    </zeebe:properties>
-  </bpmn:extensionElements>
+    <bpmn:extensionElements>
+        <zeebe:properties>
+            <zeebe:property name="stage"    value="ST" />
+            <zeebe:property name="activity" value="AC1" />
+        </zeebe:properties>
+    </bpmn:extensionElements>
 </bpmn:task>
 ```
 
