@@ -5,6 +5,8 @@
 ![Java](https://img.shields.io/badge/Java-17-blue)
 ![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.5.x-brightgreen)
 ![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
+![Camunda 7](https://img.shields.io/badge/Camunda-7-blue)
+![Camunda 8](https://img.shields.io/badge/Camunda-8-purple)
 ![CI](https://github.com/jefersonferr/bpmnflow-spring-boot-starter/actions/workflows/ci.yml/badge.svg)
 
 ---
@@ -13,6 +15,7 @@
 
 - [What it does](#what-it-does)
 - [Quick Start](#quick-start)
+- [Engine Support](#engine-support)
 - [Configuration](#configuration)
 - [WorkflowEngine API](#workflowengine-api)
 - [REST API](#rest-api)
@@ -27,6 +30,7 @@
 
 - A **`WorkflowEngine`** bean ready for injection — no setup code required
 - **BPMN model parsed at startup** from classpath or filesystem paths
+- **Camunda 7 and Camunda 8 support** — declare the target engine in your `bpmn-config.yaml`
 - **Hot-swap support** — upload a new `.bpmn` file at runtime via `POST /bpmnflow/model` without restarting
 - An optional **REST API** at `/bpmnflow/**` for model inspection and navigation
 - **Swagger UI** automatically available when springdoc is on the classpath
@@ -42,7 +46,7 @@
 <dependency>
     <groupId>org.bpmnflow</groupId>
     <artifactId>bpmnflow-spring-boot-starter</artifactId>
-    <version>2.0.0</version>
+    <version>3.0.0</version>
 </dependency>
 ```
 
@@ -89,6 +93,60 @@ All subsequent requests to `/bpmnflow/**` and any bean injecting `AtomicReferenc
 
 ---
 
+## Engine Support
+
+BPMNFlow supports BPMN models created with both **Camunda 7** and **Camunda 8** (Zeebe). The target engine is declared in your `bpmn-config.yaml` via the `engine` field — no code changes required.
+
+### Camunda 7
+
+```yaml
+# bpmn-config.yaml
+bpmn_model_parser:
+  engine: camunda7   # default — can be omitted for backward compatibility
+  model_properties:
+    ...
+```
+
+Extension properties use the `camunda:` namespace in the BPMN XML:
+
+```xml
+<bpmn:task id="Task_1" name="My Task">
+  <bpmn:extensionElements>
+    <camunda:properties>
+      <camunda:property name="stage"    value="ST" />
+      <camunda:property name="activity" value="AC1" />
+    </camunda:properties>
+  </bpmn:extensionElements>
+</bpmn:task>
+```
+
+### Camunda 8
+
+```yaml
+# bpmn-config.yaml
+bpmn_model_parser:
+  engine: camunda8
+  model_properties:
+    ...
+```
+
+Extension properties use the `zeebe:` namespace in the BPMN XML:
+
+```xml
+<bpmn:task id="Task_1" name="My Task">
+  <bpmn:extensionElements>
+    <zeebe:properties>
+      <zeebe:property name="stage"    value="ST" />
+      <zeebe:property name="activity" value="AC1" />
+    </zeebe:properties>
+  </bpmn:extensionElements>
+</bpmn:task>
+```
+
+The `engine` field defaults to `camunda7` when omitted, ensuring full backward compatibility for existing configurations.
+
+---
+
 ## Configuration
 
 All properties are declared under the `bpmnflow` prefix. IDE auto-complete is supported via the included configuration metadata.
@@ -105,6 +163,8 @@ bpmnflow:
 | `bpmnflow.model-path` | `String` | `classpath:process.bpmn` | Path to the BPMN model. Supports `classpath:` and absolute filesystem paths. |
 | `bpmnflow.config-path` | `String` | `classpath:bpmn-config.yaml` | Path to the YAML validation/extraction config. Supports `classpath:` and absolute filesystem paths. |
 | `bpmnflow.expose-api` | `boolean` | `true` | When `true`, registers the REST controller at `/bpmnflow/**`. |
+
+The `engine` field (`camunda7` or `camunda8`) is declared inside `bpmn-config.yaml`, not in `application.yaml`. This keeps engine selection tied to the model config rather than the application config.
 
 ### Filesystem paths
 
