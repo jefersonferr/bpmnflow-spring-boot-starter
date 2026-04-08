@@ -48,7 +48,7 @@
 <dependency>
     <groupId>org.bpmnflow</groupId>
     <artifactId>bpmnflow-spring-boot-starter</artifactId>
-    <version>3.0.0</version>
+    <version>3.1.0</version>
 </dependency>
 ```
 
