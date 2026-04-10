@@ -24,9 +24,9 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
 @SuppressWarnings("unused")
-@Tag(name = "Workflow", description = "Inspection and navigation of the parsed BPMN model")
+@Tag(name = "Process", description = "Inspection and navigation of the parsed BPMN model")
 @RestController
-@RequestMapping("/bpmnflow")
+@RequestMapping("/process")
 public class WorkflowApiController {
 
     /**

@@ -27,7 +27,7 @@ import java.util.concurrent.atomic.AtomicReference;
  *
  * <p>The {@code AtomicReference<WorkflowEngine>} is the single source of truth for the active engine.
  * Both {@link WorkflowApiController} and any application bean that injects it will always see the
- * most recent model — including models uploaded at runtime via {@code POST /bpmnflow/model}.</p>
+ * most recent model — including models uploaded at runtime via {@code POST /process/model}.</p>
  *
  * <p>All beans are conditional: if the application already defines an
  * {@code AtomicReference<WorkflowEngine>}, auto-configuration backs off completely.</p>
@@ -50,7 +50,7 @@ public class BpmnFlowAutoConfiguration {
      * The shared mutable engine holder. Both {@link WorkflowApiController} and application beans
      * that inject this reference will always resolve to the currently active engine.
      *
-     * <p>When a new model is uploaded via {@code POST /bpmnflow/model}, the controller calls
+     * <p>When a new model is uploaded via {@code POST /process/model}, the controller calls
      * {@code engineRef.set(...)} on this very instance — so all other beans sharing the reference
      * automatically reflect the new model on the next call to {@code engineRef.get()}.</p>
      */
@@ -65,7 +65,7 @@ public class BpmnFlowAutoConfiguration {
      * {@code WorkflowEngine} directly instead of {@code AtomicReference<WorkflowEngine>}.
      *
      * <p><strong>Note:</strong> beans that inject {@code WorkflowEngine} directly will NOT see
-     * model updates from {@code POST /bpmnflow/model}. Inject
+     * model updates from {@code POST /process/model}. Inject
      * {@code AtomicReference<WorkflowEngine>} and call {@code .get()} to always get the current
      * model.</p>
      */

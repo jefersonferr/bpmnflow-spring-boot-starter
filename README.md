@@ -32,8 +32,8 @@
 - A **`WorkflowEngine`** bean ready for injection — no setup code required
 - **BPMN model parsed at startup** from classpath or filesystem paths
 - **Camunda 7 and Camunda 8 support** — declare the target engine in your `bpmn-config.yaml`
-- **Hot-swap support** — upload a new `.bpmn` file at runtime via `POST /bpmnflow/model` without restarting
-- An optional **REST API** at `/bpmnflow/**` for model inspection and navigation
+- **Hot-swap support** — upload a new `.bpmn` file at runtime via `POST /process/model` without restarting
+- An optional **REST API** at `/process/**` for model inspection and navigation
 - **Swagger UI** automatically available when springdoc is on the classpath
 - Full **back-off support** — if you define your own `WorkflowEngine` bean, auto-configuration steps aside
 - **Runnable demo available** — see [bpmnflow-spring-boot-demo](https://github.com/jefersonferr/bpmnflow-spring-boot-demo) for a complete working example
@@ -48,7 +48,7 @@
 <dependency>
     <groupId>org.bpmnflow</groupId>
     <artifactId>bpmnflow-spring-boot-starter</artifactId>
-    <version>3.1.0</version>
+    <version>3.2.0</version>
 </dependency>
 ```
 
@@ -87,11 +87,11 @@ That's it. No `@Bean` methods, no `ModelParser` calls, no stream wiring.
 ### 4. Hot-swap the active model at runtime
 
 ```bash
-curl -X POST http://localhost:8080/bpmnflow/model \
+curl -X POST http://localhost:8080/process/model \
   -F "file=@my-process.bpmn"
 ```
 
-All subsequent requests to `/bpmnflow/**` and any bean injecting `AtomicReference<WorkflowEngine>` will immediately reflect the new model.
+All subsequent requests to `/process/**` and any bean injecting `AtomicReference<WorkflowEngine>` will immediately reflect the new model.
 
 ---
 
@@ -101,7 +101,7 @@ The [bpmnflow-spring-boot-demo](https://github.com/jefersonferr/bpmnflow-spring-
 
 - A **Pizza Delivery** BPMN process pre-loaded at startup
 - Generic `ProcessController` endpoints that navigate the model without any hardcoded business logic
-- Hot-swap — upload a different `.bpmn` at runtime via `POST /bpmnflow/model`
+- Hot-swap — upload a different `.bpmn` at runtime via `POST /process/model`
 - Full Swagger UI at `http://localhost:8080/swagger-ui.html`
 
 ```bash
@@ -181,7 +181,7 @@ bpmnflow:
 |---|---|---|---|
 | `bpmnflow.model-path` | `String` | `classpath:process.bpmn` | Path to the BPMN model. Supports `classpath:` and absolute filesystem paths. |
 | `bpmnflow.config-path` | `String` | `classpath:bpmn-config.yaml` | Path to the YAML validation/extraction config. Supports `classpath:` and absolute filesystem paths. |
-| `bpmnflow.expose-api` | `boolean` | `true` | When `true`, registers the REST controller at `/bpmnflow/**`. |
+| `bpmnflow.expose-api` | `boolean` | `true` | When `true`, registers the REST controller at `/process/**`. |
 
 The `engine` field (`camunda7` or `camunda8`) is declared inside `bpmn-config.yaml`, not in `application.yaml`. This keeps engine selection tied to the model config rather than the application config.
 
@@ -262,19 +262,19 @@ Beans that inject `WorkflowEngine` directly receive the engine active at startup
 
 ## REST API
 
-When `bpmnflow.expose-api=true` (the default) and the application is a web app, the following endpoints are registered at `/bpmnflow/**`.
+When `bpmnflow.expose-api=true` (the default) and the application is a web app, the following endpoints are registered at `/process/**`.
 
 | Method | Path | Description |
 |---|---|---|
-| `POST` | `/bpmnflow/model` | Upload a new `.bpmn` file to replace the active model at runtime |
-| `GET` | `/bpmnflow/info` | Workflow metadata: name, id, version, type, subtype, health summary |
-| `GET` | `/bpmnflow/validate` | Validation result and list of inconsistencies |
-| `GET` | `/bpmnflow/activities` | All activities in the workflow |
-| `GET` | `/bpmnflow/activities/{abbreviation}` | Single activity by abbreviation |
-| `GET` | `/bpmnflow/activities/{abbreviation}/next` | All outgoing transitions from a given activity |
-| `GET` | `/bpmnflow/stages` | All stages declared in the workflow lanes |
-| `GET` | `/bpmnflow/rules` | All workflow rules (transitions) |
-| `GET` | `/bpmnflow/rules/by-status?status={status}` | Rules whose process status matches the given value |
+| `POST` | `/process/model` | Upload a new `.bpmn` file to replace the active model at runtime |
+| `GET` | `/process/info` | Process metadata: name, id, version, type, subtype, health summary |
+| `GET` | `/process/validate` | Validation result and list of inconsistencies |
+| `GET` | `/process/activities` | All activities in the workflow |
+| `GET` | `/process/activities/{abbreviation}` | Single activity by abbreviation |
+| `GET` | `/process/activities/{abbreviation}/next` | All outgoing transitions from a given activity |
+| `GET` | `/process/stages` | All stages declared in the workflow lanes |
+| `GET` | `/process/rules` | All workflow rules (transitions) |
+| `GET` | `/process/rules/by-status?status={status}` | Rules whose process status matches the given value |
 
 ### Swagger UI
 
@@ -283,6 +283,18 @@ If `springdoc-openapi-starter-webmvc-ui` is on the classpath, the full OpenAPI d
 ```
 http://localhost:8080/swagger-ui.html
 ```
+
+To enable Swagger UI, add the dependency to your project:
+
+```xml
+<dependency>
+    <groupId>org.springdoc</groupId>
+    <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+    <version>2.6.0</version>
+</dependency>
+```
+
+The API is documented under the **Process** tag, with descriptions, parameter examples, and response codes for every endpoint.
 
 ### Disabling the API
 

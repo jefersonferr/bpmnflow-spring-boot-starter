@@ -35,7 +35,7 @@ public class BpmnFlowProperties {
     private String configPath = "classpath:bpmn-config.yaml";
 
     /**
-     * When true, registers a REST controller at {@code /bpmnflow/**} exposing
+     * When true, registers a REST controller at {@code /process/**} exposing
      * workflow inspection and navigation endpoints. Default: true.
      */
     private boolean exposeApi = true;

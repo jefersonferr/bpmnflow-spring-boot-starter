@@ -52,7 +52,7 @@ class WorkflowApiControllerTest {
     }
 
     @Nested
-    @DisplayName("GET /bpmnflow/info")
+    @DisplayName("GET /process/info")
     class InfoTests {
 
         @Test
@@ -98,7 +98,7 @@ class WorkflowApiControllerTest {
     }
 
     @Nested
-    @DisplayName("GET /bpmnflow/validate")
+    @DisplayName("GET /process/validate")
     class ValidateTests {
 
         @Test
@@ -126,7 +126,7 @@ class WorkflowApiControllerTest {
     }
 
     @Nested
-    @DisplayName("GET /bpmnflow/activities")
+    @DisplayName("GET /process/activities")
     class ActivitiesTests {
 
         @Test
@@ -143,7 +143,7 @@ class WorkflowApiControllerTest {
     }
 
     @Nested
-    @DisplayName("GET /bpmnflow/activities/{abbreviation}")
+    @DisplayName("GET /process/activities/{abbreviation}")
     class ActivityByAbbreviationTests {
 
         @Test
@@ -167,7 +167,7 @@ class WorkflowApiControllerTest {
     }
 
     @Nested
-    @DisplayName("GET /bpmnflow/activities/{abbreviation}/next")
+    @DisplayName("GET /process/activities/{abbreviation}/next")
     class NextStepsTests {
 
         @Test
@@ -197,7 +197,7 @@ class WorkflowApiControllerTest {
     }
 
     @Test
-    @DisplayName("GET /bpmnflow/stages returns 200")
+    @DisplayName("GET /process/stages returns 200")
     void stages_returns200() {
         when(engine.listStages()).thenReturn(List.of(new Stage("Triage", "TR")));
 
@@ -209,7 +209,7 @@ class WorkflowApiControllerTest {
     }
 
     @Test
-    @DisplayName("GET /bpmnflow/rules returns 200")
+    @DisplayName("GET /process/rules returns 200")
     void rules_returns200() {
         when(engine.listRules()).thenReturn(List.of());
 
@@ -221,7 +221,7 @@ class WorkflowApiControllerTest {
     }
 
     @Nested
-    @DisplayName("GET /bpmnflow/rules/by-status")
+    @DisplayName("GET /process/rules/by-status")
     class RulesByStatusTests {
 
         @Test
