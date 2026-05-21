@@ -1,6 +1,7 @@
 package org.bpmnflow;
 
 import org.bpmnflow.model.ActivityNode;
+import org.bpmnflow.model.ApiActivityNode;
 import org.bpmnflow.model.Inconsistency;
 import org.bpmnflow.model.Stage;
 import org.bpmnflow.model.Workflow;
@@ -24,6 +25,9 @@ import java.util.List;
  *
  * // 3. Filter rules triggered by a specific process status
  * List&lt;WorkflowRule&gt; entryRules = engine.rulesTriggeredBy("NV");
+ *
+ * // 4. List only API-handler service tasks
+ * List&lt;ApiActivityNode&gt; apiTasks = engine.listApiActivities();
  * </pre>
  */
 public interface WorkflowEngine {
@@ -49,6 +53,15 @@ public interface WorkflowEngine {
      * Returns all activities in the workflow, ordered as parsed.
      */
     List<ActivityNode> listActivities();
+
+    /**
+     * Returns only the activities that are {@link ApiActivityNode} instances —
+     * i.e. {@code ServiceTask} elements with a connector or job definition.
+     *
+     * <p>Useful for the {@code bpmnflow-process-runtime} to discover which
+     * activities require an {@code ApiHandlerProvider} at execution time.</p>
+     */
+    List<ApiActivityNode> listApiActivities();
 
     /**
      * Returns all stages declared in the workflow lanes.
