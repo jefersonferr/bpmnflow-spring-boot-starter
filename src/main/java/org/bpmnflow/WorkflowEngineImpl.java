@@ -66,7 +66,7 @@ public class WorkflowEngineImpl implements WorkflowEngine {
         return workflow.getActivities().stream()
                 .filter(a -> a instanceof ApiActivityNode)
                 .map(a -> (ApiActivityNode) a)
-                .collect(Collectors.toUnmodifiableList());
+                .toList();
     }
 
     @Override
