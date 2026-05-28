@@ -144,16 +144,16 @@ class BpmnFlowAutoConfigurationTest {
     static class CustomEngineConfig {
 
         static class CustomEngine implements WorkflowEngine {
-            @Override public Workflow getWorkflow()                          { return null; }
-            @Override public List<Inconsistency> validate()                  { return List.of(); }
-            @Override public boolean isValid()                               { return true; }
-            @Override public List<ActivityNode> listActivities()             { return List.of(); }
-            @Override public List<ApiActivityNode> listApiActivities()       { return List.of(); }
-            @Override public List<Stage> listStages()                        { return List.of(); }
-            @Override public List<WorkflowRule> listRules()                  { return List.of(); }
-            @Override public List<WorkflowEngine.NextStep> nextSteps(String a) { return List.of(); }
-            @Override public List<WorkflowRule> rulesTriggeredBy(String s)   { return List.of(); }
-            @Override public ActivityNode findActivity(String a)             { return null; }
+            @Override public Workflow getWorkflow()                              { return null; }
+            @Override public List<Inconsistency> validate()                      { return List.of(); }
+            @Override public boolean isValid()                                   { return true; }
+            @Override public List<ActivityNode> listActivities()                 { return List.of(); }
+            @Override public List<ApiActivityNode> listApiActivities()           { return List.of(); }
+            @Override public List<Stage> listStages()                            { return List.of(); }
+            @Override public List<WorkflowRule> listRules()                      { return List.of(); }
+            @Override public List<WorkflowEngine.NextStep> nextSteps(String a)   { return List.of(); }
+            @Override public List<WorkflowRule> rulesTriggeredBy(String s)       { return List.of(); }
+            @Override public ActivityNode findActivity(String a)                 { return null; }
         }
 
         @Bean
