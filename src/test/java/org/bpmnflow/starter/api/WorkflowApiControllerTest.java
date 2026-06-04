@@ -9,6 +9,7 @@ import org.bpmnflow.model.RuleType;
 import org.bpmnflow.model.Stage;
 import org.bpmnflow.model.Workflow;
 import org.bpmnflow.model.WorkflowRule;
+import org.bpmnflow.starter.dto.WorkflowRuleDto;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -43,7 +44,6 @@ class WorkflowApiControllerTest {
 
     @BeforeEach
     void setUp() {
-        // Wire the controller manually so AtomicReference is properly initialised
         controller = new WorkflowApiController(new AtomicReference<>(engine), loader);
 
         workflow = new Workflow("My Process", "PROC-001", "1.0",
@@ -61,6 +61,7 @@ class WorkflowApiControllerTest {
             when(engine.getWorkflow()).thenReturn(workflow);
             when(engine.isValid()).thenReturn(true);
             when(engine.listActivities()).thenReturn(List.of(activity));
+            when(engine.listApiActivities()).thenReturn(List.of());
             when(engine.listStages()).thenReturn(List.of(new Stage("Triage", "TR")));
             when(engine.listRules()).thenReturn(List.of());
 
@@ -76,6 +77,7 @@ class WorkflowApiControllerTest {
             assertEquals("ODN",        body.get("process_subtype"));
             assertEquals(true,         body.get("valid"));
             assertEquals(1,            body.get("activityCount"));
+            assertEquals(0,            body.get("apiActivityCount"));
             assertEquals(1,            body.get("stageCount"));
             assertEquals(0,            body.get("ruleCount"));
         }
@@ -87,6 +89,7 @@ class WorkflowApiControllerTest {
             when(engine.getWorkflow()).thenReturn(nullWorkflow);
             when(engine.isValid()).thenReturn(false);
             when(engine.listActivities()).thenReturn(List.of());
+            when(engine.listApiActivities()).thenReturn(List.of());
             when(engine.listStages()).thenReturn(List.of());
             when(engine.listRules()).thenReturn(List.of());
 
@@ -209,13 +212,13 @@ class WorkflowApiControllerTest {
     }
 
     @Test
-    @DisplayName("GET /process/rules returns 200")
+    @DisplayName("GET /process/rules returns 200 with WorkflowRuleDto list")
     void rules_returns200() {
         when(engine.listRules()).thenReturn(List.of());
 
-        ResponseEntity<List<WorkflowRule>> response = controller.rules();
+        ResponseEntity<List<WorkflowRuleDto>> response = controller.rules();
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        List<WorkflowRule> body = response.getBody();
+        List<WorkflowRuleDto> body = response.getBody();
         assertNotNull(body);
         assertTrue(body.isEmpty());
     }
@@ -225,7 +228,7 @@ class WorkflowApiControllerTest {
     class RulesByStatusTests {
 
         @Test
-        @DisplayName("returns 200 with matching rules")
+        @DisplayName("returns 200 with matching rules as WorkflowRuleDto")
         void rulesByStatus_returns200() {
             WorkflowRule rule = new WorkflowRule(RuleType.START_TO_TASK, null, activity, null, "NV");
             when(engine.rulesTriggeredBy("NV")).thenReturn(List.of(rule));
@@ -238,6 +241,7 @@ class WorkflowApiControllerTest {
             List<?> rules = (List<?>) body.get("rules");
             assertNotNull(rules);
             assertEquals(1, rules.size());
+            assertInstanceOf(WorkflowRuleDto.class, rules.get(0));
         }
 
         @Test

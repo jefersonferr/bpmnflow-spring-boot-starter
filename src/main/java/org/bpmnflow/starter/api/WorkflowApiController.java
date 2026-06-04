@@ -1,13 +1,14 @@
 package org.bpmnflow.starter.api;
 
 import org.bpmnflow.WorkflowEngine;
-import org.bpmnflow.WorkflowEngine.NextStep;
 import org.bpmnflow.WorkflowEngineImpl;
 import org.bpmnflow.WorkflowLoader;
 import org.bpmnflow.model.ActivityNode;
+import org.bpmnflow.model.ApiActivityNode;
 import org.bpmnflow.model.Inconsistency;
 import org.bpmnflow.model.Stage;
-import org.bpmnflow.model.WorkflowRule;
+import org.bpmnflow.starter.dto.NextStepDto;
+import org.bpmnflow.starter.dto.WorkflowRuleDto;
 import org.bpmnflow.parser.ConfigLoader;
 import org.bpmnflow.parser.ModelParser;
 import io.swagger.v3.oas.annotations.Operation;
@@ -29,17 +30,7 @@ import java.util.concurrent.atomic.AtomicReference;
 @RequestMapping("/process")
 public class WorkflowApiController {
 
-    /**
-     * Shared mutable engine holder — injected from the auto-configuration.
-     * Updating this reference propagates to every bean that shares it,
-     * including application beans that inject {@code AtomicReference<WorkflowEngine>}.
-     */
     private final AtomicReference<WorkflowEngine> engineRef;
-
-    /**
-     * The config stream source used when re-parsing an uploaded model.
-     * Kept from the original WorkflowLoader so the same validation rules apply.
-     */
     private final WorkflowLoader loader;
 
     public WorkflowApiController(AtomicReference<WorkflowEngine> engineRef, WorkflowLoader loader) {
@@ -75,15 +66,14 @@ public class WorkflowApiController {
             engineRef.set(new WorkflowEngineImpl(workflow));
 
             String filename = file.getOriginalFilename() != null
-                    ? file.getOriginalFilename()
-                    : "unknown";
+                    ? file.getOriginalFilename() : "unknown";
 
             return ResponseEntity.ok(Map.of(
-                    "message",         "Model replaced successfully",
-                    "filename",         filename,
-                    "valid",            engineRef.get().isValid(),
-                    "activityCount",    workflow.getActivities().size(),
-                    "inconsistencies",  workflow.getInconsistencies()
+                    "message",        "Model replaced successfully",
+                    "filename",        filename,
+                    "valid",           engineRef.get().isValid(),
+                    "activityCount",   workflow.getActivities().size(),
+                    "inconsistencies", workflow.getInconsistencies()
             ));
 
         } catch (Exception e) {
@@ -93,7 +83,7 @@ public class WorkflowApiController {
     }
 
     // ---------------------------------------------------------------
-    // All other endpoints delegate to engineRef.get()
+    // Workflow metadata
     // ---------------------------------------------------------------
 
     @Operation(summary = "Workflow metadata",
@@ -102,19 +92,24 @@ public class WorkflowApiController {
     public ResponseEntity<Map<String, Object>> info() {
         WorkflowEngine engine = engineRef.get();
         var wf = engine.getWorkflow();
-        return ResponseEntity.ok(Map.of(
-                "name",            orEmpty(wf.getName()),
-                "id",              orEmpty(wf.getId()),
-                "version",         orEmpty(wf.getVersion()),
-                "process_type",    orEmpty(wf.getType()),
-                "process_subtype", orEmpty(wf.getSubtype()),
-                "documentation",   orEmpty(wf.getDocumentation()),
-                "valid",           engine.isValid(),
-                "activityCount",   engine.listActivities().size(),
-                "stageCount",      engine.listStages().size(),
-                "ruleCount",       engine.listRules().size()
+        return ResponseEntity.ok(Map.ofEntries(
+                Map.entry("name",             orEmpty(wf.getName())),
+                Map.entry("id",               orEmpty(wf.getId())),
+                Map.entry("version",          orEmpty(wf.getVersion())),
+                Map.entry("process_type",     orEmpty(wf.getType())),
+                Map.entry("process_subtype",  orEmpty(wf.getSubtype())),
+                Map.entry("documentation",    orEmpty(wf.getDocumentation())),
+                Map.entry("valid",            engine.isValid()),
+                Map.entry("activityCount",    engine.listActivities().size()),
+                Map.entry("apiActivityCount", engine.listApiActivities().size()),
+                Map.entry("stageCount",       engine.listStages().size()),
+                Map.entry("ruleCount",        engine.listRules().size())
         ));
     }
+
+    // ---------------------------------------------------------------
+    // Validation
+    // ---------------------------------------------------------------
 
     @Operation(summary = "Validate BPMN model",
             description = "Returns all inconsistencies detected during parsing. Empty list means the model is valid.")
@@ -127,11 +122,24 @@ public class WorkflowApiController {
         ));
     }
 
+    // ---------------------------------------------------------------
+    // Activities
+    // ---------------------------------------------------------------
+
     @Operation(summary = "List all activities",
-            description = "Returns every activity parsed from the BPMN model")
+            description = "Returns every activity parsed from the BPMN model. " +
+                    "ApiActivityNode entries include an 'apiHandler' field and carry nodeType='API_TASK'.")
     @GetMapping("/activities")
     public ResponseEntity<List<ActivityNode>> activities() {
         return ResponseEntity.ok(engineRef.get().listActivities());
+    }
+
+    @Operation(summary = "List API-handler activities",
+            description = "Returns only ServiceTask activities that declare a connector or job definition. " +
+                    "Each entry includes the full apiHandler definition (endpoint, method, mappings).")
+    @GetMapping("/api-activities")
+    public ResponseEntity<List<ApiActivityNode>> apiActivities() {
+        return ResponseEntity.ok(engineRef.get().listApiActivities());
     }
 
     @Operation(summary = "Find activity by abbreviation",
@@ -148,13 +156,17 @@ public class WorkflowApiController {
     }
 
     @Operation(summary = "Next steps from an activity",
-            description = "Returns every possible transition reachable from the given activity in the active BPMN model")
+            description = "Returns every possible transition reachable from the given activity. " +
+                    "source and target are activity abbreviations.")
     @GetMapping("/activities/{abbreviation}/next")
     public ResponseEntity<?> nextSteps(
             @Parameter(description = "Activity abbreviation as defined in the active BPMN model")
             @PathVariable("abbreviation") String abbreviation) {
         try {
-            List<NextStep> steps = engineRef.get().nextSteps(abbreviation);
+            List<NextStepDto> steps = engineRef.get().nextSteps(abbreviation)
+                    .stream()
+                    .map(NextStepDto::from)
+                    .toList();
             return ResponseEntity.ok(Map.of(
                     "activity",  abbreviation,
                     "nextSteps", steps
@@ -164,6 +176,10 @@ public class WorkflowApiController {
         }
     }
 
+    // ---------------------------------------------------------------
+    // Stages
+    // ---------------------------------------------------------------
+
     @Operation(summary = "List all stages",
             description = "Returns all stages declared in the workflow lanes")
     @GetMapping("/stages")
@@ -171,29 +187,46 @@ public class WorkflowApiController {
         return ResponseEntity.ok(engineRef.get().listStages());
     }
 
+    // ---------------------------------------------------------------
+    // Rules
+    // ---------------------------------------------------------------
+
     @Operation(summary = "List all rules",
-            description = "Returns all workflow rules (transitions between activities)")
+            description = "Returns all workflow rules. " +
+                    "source and target are activity abbreviations, not full objects.")
     @GetMapping("/rules")
-    public ResponseEntity<List<WorkflowRule>> rules() {
-        return ResponseEntity.ok(engineRef.get().listRules());
+    public ResponseEntity<List<WorkflowRuleDto>> rules() {
+        List<WorkflowRuleDto> dtos = engineRef.get().listRules()
+                .stream()
+                .map(WorkflowRuleDto::from)
+                .toList();
+        return ResponseEntity.ok(dtos);
     }
 
     @Operation(summary = "Rules triggered by process status",
-            description = "Returns all rules whose process status matches the given value")
+            description = "Returns all rules whose process status matches the given value. " +
+                    "source and target are activity abbreviations.")
     @GetMapping("/rules/by-status")
     public ResponseEntity<?> rulesByStatus(
             @Parameter(description = "Process status value as defined in the active BPMN model")
             @RequestParam("status") String status) {
         try {
-            List<WorkflowRule> rules = engineRef.get().rulesTriggeredBy(status);
+            List<WorkflowRuleDto> dtos = engineRef.get().rulesTriggeredBy(status)
+                    .stream()
+                    .map(WorkflowRuleDto::from)
+                    .toList();
             return ResponseEntity.ok(Map.of(
                     "processStatus", status,
-                    "rules",         rules
+                    "rules",         dtos
             ));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
+
+    // ---------------------------------------------------------------
+    // Helpers
+    // ---------------------------------------------------------------
 
     private static String orEmpty(String value) {
         return value != null ? value : "";

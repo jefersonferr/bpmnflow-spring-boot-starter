@@ -55,6 +55,20 @@ public class WorkflowEngineImpl implements WorkflowEngine {
         return List.copyOf(workflow.getActivities());
     }
 
+    /**
+     * Returns only {@link ApiActivityNode} instances from the activity list.
+     *
+     * <p>Filters by runtime type so that plain {@link ActivityNode} entries
+     * (human tasks, manual steps, etc.) are excluded. The result is unmodifiable.</p>
+     */
+    @Override
+    public List<ApiActivityNode> listApiActivities() {
+        return workflow.getActivities().stream()
+                .filter(a -> a instanceof ApiActivityNode)
+                .map(a -> (ApiActivityNode) a)
+                .toList();
+    }
+
     @Override
     public List<Stage> listStages() {
         return List.copyOf(workflow.getStages());
