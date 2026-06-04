@@ -20,6 +20,7 @@
 - [Configuration](#configuration)
 - [WorkflowEngine API](#workflowengine-api)
 - [REST API](#rest-api)
+- [API Handler Service Tasks](#api-handler-service-tasks)
 - [Customization](#customization)
 - [What's Next](#whats-next)
 
@@ -34,6 +35,7 @@
 - **Camunda 7 and Camunda 8 support** — declare the target engine in your `bpmn-config.yaml`
 - **Hot-swap support** — upload a new `.bpmn` file at runtime via `POST /process/model` without restarting
 - An optional **REST API** at `/process/**` for model inspection and navigation
+- **Polymorphic JSON serialization** — service tasks with API handler definitions serialize with an `apiHandler` block via Jackson MixIn, keeping `bpmnflow-core` free of any Jackson dependency
 - **Swagger UI** automatically available when springdoc is on the classpath
 - Full **back-off support** — if you define your own `WorkflowEngine` bean, auto-configuration steps aside
 - **Runnable demo available** — see [bpmnflow-spring-boot-demo](https://github.com/jefersonferr/bpmnflow-spring-boot-demo) for a complete working example
@@ -48,7 +50,7 @@
 <dependency>
     <groupId>org.bpmnflow</groupId>
     <artifactId>bpmnflow-spring-boot-starter</artifactId>
-    <version>3.2.1</version>
+    <version>3.2.2</version>
 </dependency>
 ```
 
@@ -225,6 +227,20 @@ List<WorkflowEngine.NextStep> steps = engine.nextSteps(abbreviation);
 List<WorkflowRule> entryRules = engine.rulesTriggeredBy(processStatus);
 ```
 
+### Detecting API handler activities
+
+`listActivities()` returns `List<ActivityNode>`. Service tasks parsed with a `bpmnflow:apiHandler` definition are returned as `ApiActivityNode` instances:
+
+```java
+engine.listActivities().forEach(activity -> {
+    if (activity instanceof ApiActivityNode api) {
+        ApiHandlerDefinition h = api.getApiHandler();
+        System.out.printf("%-10s  %s %s%n",
+            api.getAbbreviation(), h.getMethod(), h.getEndpoint());
+    }
+});
+```
+
 ### `NextStep` record
 
 `nextSteps(abbreviation)` returns a list of `NextStep` records, each describing one possible outgoing transition:
@@ -269,7 +285,8 @@ When `bpmnflow.expose-api=true` (the default) and the application is a web app, 
 | `POST` | `/process/model` | Upload a new `.bpmn` file to replace the active model at runtime |
 | `GET` | `/process/info` | Process metadata: name, id, version, type, subtype, health summary |
 | `GET` | `/process/validate` | Validation result and list of inconsistencies |
-| `GET` | `/process/activities` | All activities in the workflow |
+| `GET` | `/process/activities` | All activities — plain tasks and API service tasks |
+| `GET` | `/process/api-activities` | Only activities that are instances of `ApiActivityNode` |
 | `GET` | `/process/activities/{abbreviation}` | Single activity by abbreviation |
 | `GET` | `/process/activities/{abbreviation}/next` | All outgoing transitions from a given activity |
 | `GET` | `/process/stages` | All stages declared in the workflow lanes |
@@ -301,6 +318,63 @@ The API is documented under the **Process** tag, with descriptions, parameter ex
 ```yaml
 bpmnflow:
   expose-api: false
+```
+
+---
+
+## API Handler Service Tasks
+
+Since `3.2.2`, service tasks configured with a `bpmnflow:apiHandler` extension element are serialized with an additional `apiHandler` block in the JSON response. This is handled transparently via a Jackson MixIn registered by `BpmnFlowAutoConfiguration` — `bpmnflow-core` remains free of any Jackson dependency.
+
+### JSON response shape
+
+**Plain task** — `GET /process/activities`:
+```json
+{
+  "stageCode": "CS",
+  "activityCode": "SEL",
+  "name": "Select Order",
+  "documentation": null,
+  "abbreviation": "CS-SEL",
+  "conclusions": [
+    { "code": "null", "name": null, "documentation": null }
+  ]
+}
+```
+
+**API service task** — `GET /process/activities` or `GET /process/api-activities`:
+```json
+{
+  "stageCode": "SC",
+  "activityCode": "PMT",
+  "name": "Process Payment",
+  "documentation": null,
+  "abbreviation": "SC-PMT",
+  "apiHandler": {
+    "connectorId": "payment-api",
+    "endpoint": "https://api.example.com/v1/charge",
+    "method": "POST",
+    "retries": 0,
+    "taskHeaders": [],
+    "inputMappings": [
+      { "key": "payload", "value": "{\"amount\": ${{var.amount}}}" }
+    ],
+    "outputMappings": [
+      { "key": "txn_id", "value": "$.transaction_id" }
+    ]
+  },
+  "conclusions": [
+    { "code": "null", "name": null, "documentation": null }
+  ]
+}
+```
+
+The `apiHandler` field is omitted entirely from plain tasks. To enable this behavior, add the following to your `application.yaml`:
+
+```yaml
+spring:
+  jackson:
+    default-property-inclusion: non_null
 ```
 
 ---
