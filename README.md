@@ -2,9 +2,9 @@
 
 > Zero-config Spring Boot integration for [bpmnflow-core](https://github.com/jefersonferr/bpmnflow-core) — parse a BPMN model at startup, query it at runtime, and optionally expose it as a REST API.
 
-![Java](https://img.shields.io/badge/Java-17-blue)
+![Java](https://img.shields.io/badge/Java-21-blue)
 ![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.5.x-brightgreen)
-![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
+![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)
 ![Camunda 7](https://img.shields.io/badge/Camunda-7-blue)
 ![Camunda 8](https://img.shields.io/badge/Camunda-8-purple)
 ![CI](https://github.com/jefersonferr/bpmnflow-spring-boot-starter/actions/workflows/ci.yml/badge.svg)
@@ -50,7 +50,7 @@
 <dependency>
     <groupId>org.bpmnflow</groupId>
     <artifactId>bpmnflow-spring-boot-starter</artifactId>
-    <version>3.2.2</version>
+    <version>4.0.0</version>
 </dependency>
 ```
 
@@ -428,4 +428,4 @@ public class ModelInspector {
 
 ## License
 
-MIT — see [LICENSE](LICENSE).
+Apache License 2.0 — see [LICENSE](LICENSE) and [NOTICE](NOTICE).
